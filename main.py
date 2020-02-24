@@ -22,25 +22,28 @@ def is_number(s):
         return True
     except ValueError:
         pass
- 
+
     try:
         import unicodedata
         unicodedata.numeric(s)
         return True
     except (TypeError, ValueError):
         pass
- 
+
     return False
-    
+
 class ysj(object):
     def __init__(self,device, keyboard):
         self.device=device
         self.keyboard=keyboard
         self.mode=0 #模式状态：0正常，1加热设置（温度，水量，时间），2保温设定（温度，水量，时段）
 
-        self.hot_h=0
+        # 加热设定初值
+        self.hot_h=0        ##加热时间
         self.hot_m=0
         self.hot_s=0
+        self.hot_temp=0     ##加热温度
+        self.hot_waterVol=0 ##加热水量
 
         # 初始化传感器
         self.ds18b20=DS18B20()
@@ -73,17 +76,22 @@ class ysj(object):
     def main(self):
         font = self.make_font("wqy-zenhei.ttc", 24)
         font_size = font.getsize(u"水")[1]
-        #term = terminal(device, font)
+
         self.th_temp.start()
         self.th_hc04.start()
+        # 主循环
         while True:
+            # 等待按键操作期间刷新默认屏幕
             while self.keyboard.havekey == False:
                 with canvas(self.device) as draw:
                     draw.text((0,0), u"饮水机", font=font, fill="white")
                     draw.text((font.getsize(u"饮水机 ")[0],0), time.strftime("%H:%M:%S", time.localtime()), font=font, fill="red")
                     draw.text((0,font_size*1), "水温：{0:0.1f} ℃".format(self.temp), font=font, fill="green")
                     draw.text((0,font_size*2), "水位：{0:0.1f} cm".format(self.waterLevel), font=font, fill="blue")
+
+            # 有按键输入，重置标志位
             self.keyboard.havekey=False
+            # 判断按下的是#键则进入菜单
             if self.keyboard.key == "#":
                 ret=None
                 while ret != -1:
@@ -103,7 +111,7 @@ class ysj(object):
                         menu_2.add_option(u"返回", ret=-1)
                         ret2=menu_2.run()
                         print(ret2)
-                        if ret == 1:
+                        if ret2 == 1:
                             add_mode=1
                             while True:
                                 with canvas(self.device) as draw:
@@ -115,6 +123,7 @@ class ysj(object):
                                     time.sleep(0.01)
                                 # 复位按键标识符
                                 self.keyboard.havekey = False
+                                # 判断按下的是数字键
                                 if is_number(self.keyboard.key):
                                     if add_mode == 1:
                                         hot_hh=int(self.keyboard.key)
@@ -148,6 +157,31 @@ class ysj(object):
                                     print(add_mode)
                                 elif self.keyboard.key == "#":
                                     break
+                        elif ret2 == 2:
+                            add_mode=1
+                            while True:
+                                with canvas(self.device) as draw:
+                                    draw.text((0,0), u"加热温度设置", font=font)
+                                    draw.text((0,font_size*1), u"{0}".format(self.hot_temp), font=font)
+                                    draw.text((0,font_size*2), u"#确定 AD上下 BC左右", font=font)
+                                # 等待按键按下
+                                while self.keyboard.havekey == False:
+                                    time.sleep(0.01)
+                                # 复位按键标识符
+                                self.keyboard.havekey = False
+                                # 判断按下的是数字键
+                                if is_number(self.keyboard.key):
+                                    if add_mode == 1:
+                                        self.hot_temp=int(self.keyboard.key)
+                                        add_mode += 1
+                                    elif add_mode == 2:
+                                        self.hot_temp=self.hot_temp*10+int(self.keyboard.key)
+                                        add_mode += 1
+                                    elif add_mode >= 3:
+                                        break
+                                    print(add_mode)
+                                elif self.keyboard.key == "#":
+                                    break
 
                     elif ret == 2:
                         menu_3=OptionMenu(u"保温设定", self.keyboard, self.device, font=font)
@@ -162,7 +196,7 @@ class ysj(object):
                 self.keyboard.havekey=False
 
             time.sleep(0.2)
-    
+
 
 globalKeyboard=keyboard()
 if __name__ == "__main__":
