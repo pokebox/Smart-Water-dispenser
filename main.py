@@ -65,7 +65,7 @@ class ysj(object):
         self.W_DRYHEAT='DryHeat'    ##干烧状态
         self.heatMode=None
         self.start_saveTemp='1970-01-01 00:00:00'
-        self.Container_height=10        ##容器高度
+        self.Container_height=23        ##容器高度
 
         # 加热设定初值
         self.hot_h          = 0 ##加热时间
@@ -94,7 +94,7 @@ class ysj(object):
         self.th_temp = Thread(target=self.gettemp)
         self.th_temp.setDaemon(True)
 
-        self.th_hc04 = Thread(target=self.gethcsr04)
+        self.th_hc04 = Thread(target=self.getSerialSR04)
         self.th_hc04.setDaemon(True)
 
         self.th_heating = Thread(target=self.heatingTask)
@@ -113,6 +113,22 @@ class ysj(object):
     def gethcsr04(self):    ##读取超声波传感器数据
         while True:
             self.waterLevel=self.Container_height - self.hcsr04.distance()
+            time.sleep(0.5)
+    
+    def getSerialSR04(self):
+        import serial
+        try:
+            port="/dev/ttyAMA0"
+            bps=9600
+            timeout=5
+            ser=serial.Serial(port, bps, timeout=timeout)
+            print(ser.read(4).hex())
+        except Exception as e:
+            print(e)
+        while True:
+            data=ser.read(4)
+            self.waterLevel=((data[1]<<8)+data[2]) / 10.0
+            ser.flushInput()
             time.sleep(0.5)
 
     def heatingTask(self):
@@ -159,7 +175,8 @@ class ysj(object):
                         #干烧报警
                         self.heatMode = self.W_DRYHEAT
                         self.setHeating(False)
-                        self.setBeep(2,0.5)
+                        for i in range(3):
+                            self.setBeep(2,0.5)
                 else:
                     self.old_temp=self.temp
                     self.start_Heating=self.nowTime()
@@ -219,7 +236,7 @@ class ysj(object):
             while self.keyboard.havekey == False:
                 with canvas(self.device) as draw:
                     draw.text((0,0), u"饮水机", font=font, fill="white")
-                    draw.text((font.getsize(u"饮水机 ")[0],0), time.strftime("%H:%M:%S", time.localtime()), font=font, fill="yellow")
+                    draw.text((self.device.width-font.getsize(u"00:00:00 ")[0],0), time.strftime("%H:%M:%S", time.localtime()), font=font, fill="yellow")
                     draw.text((0,font_size*1), "水温：{0:0.1f} ℃".format(self.temp), font=font, fill="green")
                     draw.text((0,font_size*2), "水位：{0:0.1f} cm".format(self.waterLevel), font=font, fill="blue")
                     draw.text((0,font_size*3), "状态：", font=font, fill="white")
