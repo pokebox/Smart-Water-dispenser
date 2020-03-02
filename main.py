@@ -65,21 +65,21 @@ class ysj(object):
         self.W_DRYHEAT='DryHeat'    ##干烧状态
         self.heatMode=None
         self.start_saveTemp='1970-01-01 00:00:00'
-        self.Container_height=23        ##容器高度
+        self.Container_height=25        ##容器高度
 
         # 加热设定初值
         self.hot_h          = 0 ##加热时间
         self.hot_m          = 0
         self.hot_s          = 0
         self.hot_temp       = 70 ##加热温度
-        self.hot_waterVol   = 0 ##加热水量
+        self.hot_waterVol   = 10 ##加热水量
 
         # 保温设定初值
-        self.saveTemp           = 0 ##保温温度
-        self.saveTemp_m         = 0 ##保温时间
-        self.saveTemp_watterVol = 0 ##保温水量
+        self.saveTemp           = 25 ##保温温度
+        self.saveTemp_m         = 10 ##保温时间
+        self.saveTemp_watterVol = 10 ##保温水量
 
-        self.DryTime            = 1 ##干烧超时时间（分钟）
+        self.DryTime            = 3 ##干烧超时时间（分钟）
 
         # 初始化传感器
         self.ds18b20    = DS18B20()
@@ -94,7 +94,7 @@ class ysj(object):
         self.th_temp = Thread(target=self.gettemp)
         self.th_temp.setDaemon(True)
 
-        self.th_hc04 = Thread(target=self.getSerialSR04)
+        self.th_hc04 = Thread(target=self.gethcsr04)
         self.th_hc04.setDaemon(True)
 
         self.th_heating = Thread(target=self.heatingTask)
@@ -152,15 +152,16 @@ class ysj(object):
                     # 跳到保温模式
                     self.heatMode = self.M_SAVETEMP
                     self.start_saveTemp = self.nowTime()
-                    self.setBeep(0.2, 0.1)
-                    self.setBeep(0.2, 0.1)
-                    self.setBeep(0.2, 0.1)
+                    for i in range(3):
+                        self.setBeep(0.2, 0.1)
             # 如果是保温模式
-            elif self.heatMode == self.M_SAVETEMP:
+            if self.heatMode == self.M_SAVETEMP:
                 if self.temp >= self.saveTemp:
                     self.setHeating(False)
+                    print("close")
                 else:
                     self.setHeating(True)
+                    print("open")
 
             # 如果保温时间超过设定时间则停止保温
             if ((minNums(self.start_saveTemp, self.nowTime()) >= self.saveTemp_m)
@@ -260,6 +261,7 @@ class ysj(object):
                     menu_1.add_option(u"保温设定", ret=2)
                     if self.heatMode == self.W_DRYHEAT:
                         menu_1.add_option(u"解除报警", ret=3)
+                    menu_1.add_option(u"重启", ret=4)
                     menu_1.add_option(u"返回", ret=-1)
                     ret=menu_1.run()
                     if ret == 1:    # 加热设置目录
@@ -452,6 +454,10 @@ class ysj(object):
                     elif ret == 3:
                         self.heatMode=None
                         break
+                    elif ret == 4:
+                        
+                        GPIO.cleanup()
+                        exit()
                     elif ret == 0:
                         break
                 self.keyboard.havekey=False
