@@ -59,6 +59,7 @@ class ysj(object):
 
         self.device=device
         self.keyboard=keyboard
+        self.hide_mode=None
         self.mode=0 #模式状态：0正常，1加热设置（温度，水量，时间），2保温设定（温度，水量，时段）
         self.M_SAVETEMP='savetemp'
         self.M_HEATING='heating'
@@ -158,10 +159,8 @@ class ysj(object):
             if self.heatMode == self.M_SAVETEMP:
                 if self.temp >= self.saveTemp:
                     self.setHeating(False)
-                    print("close")
                 else:
                     self.setHeating(True)
-                    print("open")
 
             # 如果保温时间超过设定时间则停止保温
             if ((minNums(self.start_saveTemp, self.nowTime()) >= self.saveTemp_m)
@@ -261,6 +260,9 @@ class ysj(object):
                     menu_1.add_option(u"保温设定", ret=2)
                     if self.heatMode == self.W_DRYHEAT:
                         menu_1.add_option(u"解除报警", ret=3)
+                    if self.hide_mode == 1:
+                        menu_1.add_option(u"隐藏功能", ret=99)
+                        self.hide_mode=None
                     menu_1.add_option(u"重启", ret=4)
                     menu_1.add_option(u"返回", ret=-1)
                     ret=menu_1.run()
@@ -314,7 +316,6 @@ class ysj(object):
                                         add_mode += 1
                                     elif add_mode >= 7:
                                         break
-                                    print(add_mode)
                                 elif self.keyboard.key == "#":
                                     break
                         elif ret2 == 2: # 加热温度设置
@@ -339,7 +340,6 @@ class ysj(object):
                                         add_mode += 1
                                     elif add_mode >= 3:
                                         break
-                                    print(add_mode)
                                 elif self.keyboard.key == "#":
                                     break
                         elif ret2 == 3: # 加热水量设置
@@ -364,10 +364,8 @@ class ysj(object):
                                         add_mode += 1
                                     elif add_mode >= 3:
                                         break
-                                    print(add_mode)
                                 elif self.keyboard.key == "#":
                                     break
-
                     elif ret == 2:  # 保温设置目录
                         menu_3=OptionMenu(u"保温设定", self.keyboard, self.device, font=font)
                         menu_3.add_option(u"保温时间", ret=1)
@@ -423,7 +421,6 @@ class ysj(object):
                                         add_mode += 1
                                     elif add_mode >= 3:
                                         break
-                                    print(add_mode)
                                 elif self.keyboard.key == "#":
                                     break
                         elif ret3 == 3: # 保温水量设置
@@ -448,20 +445,113 @@ class ysj(object):
                                         add_mode += 1
                                     elif add_mode >= 3:
                                         break
-                                    print(add_mode)
                                 elif self.keyboard.key == "#":
                                     break
                     elif ret == 3:
                         self.heatMode=None
                         break
                     elif ret == 4:
-                        
                         GPIO.cleanup()
                         exit()
+                    elif ret == 99:
+                        font_12 = self.make_font("wqy-zenhei.ttc", 12)
+                        font_12_size = font_12.getsize(u"水")[1]
+                        while True:
+                            menu_99=OptionMenu(u"隐藏功能", self.keyboard, self.device, font=font)
+                            menu_99.add_option(u"系统信息", ret=1)
+                            menu_99.add_option(u"软件更新", ret=2)
+                            menu_99.add_option(u"网络对时", ret=3)
+                            menu_99.add_option(u"安全关机", ret=4)
+                            menu_99.add_option(u"重启系统", ret=5)
+                            menu_99.add_option(u"退出", ret=-1)
+                            ret99=menu_99.run()
+                            if ret99 == 1:
+                                import socket,psutil
+                                tempFile = open( "/sys/class/thermal/thermal_zone0/temp" )
+                                cpu_temp = tempFile.read()
+                                tempFile.close()
+                                cpu_temp=float(cpu_temp)/1000.0
+
+                                net_info=[]
+                                info=psutil.net_if_addrs()
+                                for j,k in info.items():
+                                    for item in k:
+                                        if item[0] == 2 and not item[1] == '127.0.0.1':
+                                            net_info.append(item[1])
+
+                                with canvas(self.device) as draw:
+                                    draw.text((0,0), u"系统信息", font=font, fill=(255,0,0))
+                                    draw.text((0,font_12_size*3), u"硬件版本：{0}".format(os.popen('cat /proc/device-tree/model').readlines()[0]), font=font_12)
+                                    draw.text((0,font_12_size*4), u"主机名：{0}".format(socket.gethostname()), font=font_12)
+                                    draw.text((0,font_12_size*5), u"IP: {0}".format('  '.join(str(i) for i in net_info)), font=font_12)
+                                    draw.text((0,font_12_size*6), u"内核版本：{0}".format(os.popen('uname -r').readlines()[0]), font=font_12)
+                                    draw.text((0,font_12_size*7), u"CPU温度：{0:0.2f} ℃".format(cpu_temp), font=font_12)
+                                    draw.text((0,font_12_size*8), u"CPU电压：{0}".format(os.popen('vcgencmd measure_volts | sed "s/volt=//g"').readlines()[0]), font=font_12)
+                                    draw.text((0,font_12_size*9), u"CPU最高频率：{0:0.2f}Mhz | 最低频率：{1:0.2f}Mhz".format(
+                                        float(os.popen('cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq').readlines()[0])/1000,
+                                        float(os.popen('cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_min_freq').readlines()[0])/1000), font=font_12)
+                                    draw.text((0,font_12_size*12), u"任意键返回", font=font_12, fill=(255,0,0))
+                                while self.keyboard.havekey == False:
+                                    time.sleep(0.01)
+                                # 复位按键标识符
+                                self.keyboard.havekey = False
+                            elif ret99 == 2:
+                                with canvas(self.device) as draw:
+                                    draw.text((0,0), u"软件更新", font=font, fill=(255,0,0))
+                                    draw.text((0,font_12_size*3), u"软件更新中……", font=font_12)
+                                with canvas(self.device) as draw:
+                                    draw.text((0,0), u"软件更新", font=font, fill=(255,0,0))
+                                    try:
+                                        draw.text((0,font_12_size*3), u"{0}".format(os.popen('cd /home/pi/Smart-Water-dispenser;git checkout -- . 2>&1;git pull 2>&1').readlines()[0]), font=font_12)
+                                    except Exception as e:
+                                        draw.text((0,font_12_size*4), u"错误：{0}".format(e), font=font_12, fill=(255,0,0))
+                                    draw.text((0,font_12_size*12), u"任意键返回", font=font_12, fill=(255,0,0))
+                                while self.keyboard.havekey == False:
+                                    time.sleep(0.01)
+                                self.keyboard.havekey = False
+                            elif ret99 == 3:
+                                with canvas(self.device) as draw:
+                                    draw.text((0,0), u"网络对时", font=font, fill=(255,0,0))
+                                    draw.text((0,font_12_size*3), u"正在校对时间……", font=font_12)
+                                with canvas(self.device) as draw:
+                                    draw.text((0,0), u"网络对时", font=font, fill=(255,0,0))
+                                    try:
+                                        draw.text((0,font_12_size*3), u"{0}".format(os.popen('ntpdate ntp1.aliyun.com 2>&1').readlines()[0]), font=font_12)
+                                        draw.text((0,font_12_size*4), u"{0}".format(os.popen('hwclock -w 2>&1').readlines()[0]), font=font_12)
+                                    except Exception as e:
+                                        draw.text((0,font_12_size*4), u"错误：{0}".format(e), font=font_12, fill=(255,0,0))
+                                    draw.text((0,font_12_size*12), u"任意键返回", font=font_12, fill=(255,0,0))
+                                while self.keyboard.havekey == False:
+                                    time.sleep(0.01)
+                                self.keyboard.havekey = False
+                            elif ret99 == 4:
+                                with canvas(self.device) as draw:
+                                    draw.text((0,0), u"安全关机", font=font, fill=(255,0,0))
+                                    draw.text((0,font_12_size*3), u"正在关机……", font=font_12)
+                                os.system('sync;init 0')
+                                while self.keyboard.havekey == False:
+                                    time.sleep(0.01)
+                                self.keyboard.havekey = False
+                            elif ret99 == 5:
+                                with canvas(self.device) as draw:
+                                    draw.text((0,0), u"重启系统", font=font, fill=(255,0,0))
+                                    draw.text((0,font_12_size*3), u"正在重启……", font=font_12)
+                                os.system('sync;reboot')
+                                while self.keyboard.havekey == False:
+                                    time.sleep(0.01)
+                                self.keyboard.havekey = False
+                            elif ret99 == -1:
+                                break
+                        break
                     elif ret == 0:
                         break
                 self.keyboard.havekey=False
 
+            elif self.keyboard.key == "5":  ##隐藏菜单触发
+                if self.hide_mode == None:
+                    self.hide_mode=1
+                else:
+                    self.hide_mode=None
             elif self.keyboard.key == "A":  # 加热开关
                 if self.heatMode == self.M_HEATING:
                     self.heatMode = None
