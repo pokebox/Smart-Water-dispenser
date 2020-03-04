@@ -12,8 +12,13 @@ class keyboard():
             ["7","8","9","C"],
             ["*","0","#","D"]
         ]
-        ROW_PINS = [12, 16, 20, 21] ##行BCM引脚号
-        COL_PINS = [6 , 13, 19, 26] ##列BCM引脚号
+        if True:    # 正向安装True，方向安装False
+            ROW_PINS = [12, 16, 20, 21] ##行BCM引脚号
+            COL_PINS = [6 , 13, 19, 26] ##列BCM引脚号
+        else:
+            ROW_PINS = [26, 19, 13, 6 ] ##行BCM引脚号
+            COL_PINS = [21, 20, 16, 12] ##列BCM引脚号
+
         factory = rpi_gpio.KeypadFactory()
         keypad = factory.create_keypad(keypad=KEYPAD, row_pins=ROW_PINS, col_pins=COL_PINS)
         keypad.registerKeyPressHandler(self.keyout)
@@ -23,4 +28,3 @@ class keyboard():
     def keyout(self,key):
         self.havekey=True
         self.key=key
-        
