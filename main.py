@@ -46,6 +46,7 @@ def minNums(startTime, endTime):
 
 class ysj(object):
     def __init__(self,device, keyboard):
+        self.version='1.3.5'
         GPIO.setmode(GPIO.BCM)
         self.gpio_beep      = 22    ##蜂鸣器GPIO，自行设置
         self.gpio_heating   = 23    ##加热器电源IO，自行设置
@@ -248,6 +249,7 @@ class ysj(object):
                         draw.text((font.getsize(u"状态： ")[0],font_size*3), "干烧报警！", font=font, fill=(255,50,255))
                     else:
                         draw.text((font.getsize(u"状态： ")[0],font_size*3), "待机", font=font, fill=(80,80,80))
+                    draw.text((0,font_size*6), u"软件版本：{0}".format(self.version), font=font, fill=(30,30,30))
 
             # 有按键输入，重置标志位
             self.keyboard.havekey=False
@@ -523,7 +525,7 @@ class ysj(object):
                                     draw.text((0,0), u"网络对时", font=font, fill=(255,0,0))
                                     try:
                                         draw.text((0,font_12_size*3), u"{0}".format(os.popen('ntpdate ntp1.aliyun.com 2>&1').readlines()[0]), font=font_12)
-                                        draw.text((0,font_12_size*4), u"{0}".format(os.popen('hwclock -w 2>&1').readlines()[0]), font=font_12)
+                                        draw.text((0,font_12_size*4), u"{0}".format(os.popen('hwclock -w;if [ "$?" == "0" ];then echo "ok";fi 2>&1').readlines()[0]), font=font_12)
                                     except Exception as e:
                                         draw.text((0,font_12_size*4), u"错误：{0}".format(e), font=font_12, fill=(255,0,0))
                                     draw.text((0,font_12_size*12), u"任意键返回", font=font_12, fill=(255,0,0))
