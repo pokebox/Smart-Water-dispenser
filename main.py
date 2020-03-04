@@ -249,7 +249,7 @@ class ysj(object):
                         draw.text((font.getsize(u"状态： ")[0],font_size*3), "干烧报警！", font=font, fill=(255,50,255))
                     else:
                         draw.text((font.getsize(u"状态： ")[0],font_size*3), "待机", font=font, fill=(80,80,80))
-                    draw.text((0,font_size*6), u"软件版本：{0}".format(self.version), font=font, fill=(30,30,30))
+                    draw.text((0,font_size*8-5), u"软件版本：{0}".format(self.version), font=font, fill=(30,30,30))
 
             # 有按键输入，重置标志位
             self.keyboard.havekey=False
@@ -510,7 +510,10 @@ class ysj(object):
                                 with canvas(self.device) as draw:
                                     draw.text((0,0), u"软件更新", font=font, fill=(255,0,0))
                                     try:
-                                        draw.text((0,font_12_size*3), u"{0}".format(os.popen('cd /home/pi/Smart-Water-dispenser;git checkout -- . 2>&1;git pull 2>&1').readlines()[0]), font=font_12)
+                                        gitinfo=os.popen('cd /home/pi/Smart-Water-dispenser;git checkout -- . 2>&1;git pull 2>&1').readlines()
+                                        for index, item in enumerate(gitinfo):
+                                            draw.text((0,font_12_size*(3+index)), u"{0}".format(item), font=font_12)
+                                        
                                     except Exception as e:
                                         draw.text((0,font_12_size*4), u"错误：{0}".format(e), font=font_12, fill=(255,0,0))
                                     draw.text((0,font_12_size*12), u"任意键返回", font=font_12, fill=(255,0,0))
