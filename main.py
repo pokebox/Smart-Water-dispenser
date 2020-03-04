@@ -319,56 +319,56 @@ class ysj(object):
                                             break
                                     elif self.keyboard.key == "#":
                                         break
-                        elif ret2 == 2: # 加热温度设置
-                            add_mode=1
-                            while True:
-                                with canvas(self.device) as draw:
-                                    draw.text((0,0), u"加热温度设置", font=font)
-                                    draw.text((0,font_size*1), u"{0:02d} ℃".format(self.hot_temp), font=font)
-                                    draw.text((0,font_size*2), u"#确定", font=font)
-                                # 等待按键按下
-                                while self.keyboard.havekey == False:
-                                    time.sleep(0.01)
-                                # 复位按键标识符
-                                self.keyboard.havekey = False
-                                # 判断按下的是数字键
-                                if is_number(self.keyboard.key):
-                                    if add_mode == 1:
-                                        self.hot_temp=int(self.keyboard.key)
-                                        add_mode += 1
-                                    elif add_mode == 2:
-                                        self.hot_temp=self.hot_temp*10+int(self.keyboard.key)
-                                        add_mode += 1
-                                    elif add_mode >= 3:
+                            elif ret2 == 2: # 加热温度设置
+                                add_mode=1
+                                while True:
+                                    with canvas(self.device) as draw:
+                                        draw.text((0,0), u"加热温度设置", font=font)
+                                        draw.text((0,font_size*1), u"{0:02d} ℃".format(self.hot_temp), font=font)
+                                        draw.text((0,font_size*2), u"#确定", font=font)
+                                    # 等待按键按下
+                                    while self.keyboard.havekey == False:
+                                        time.sleep(0.01)
+                                    # 复位按键标识符
+                                    self.keyboard.havekey = False
+                                    # 判断按下的是数字键
+                                    if is_number(self.keyboard.key):
+                                        if add_mode == 1:
+                                            self.hot_temp=int(self.keyboard.key)
+                                            add_mode += 1
+                                        elif add_mode == 2:
+                                            self.hot_temp=self.hot_temp*10+int(self.keyboard.key)
+                                            add_mode += 1
+                                        elif add_mode >= 3:
+                                            break
+                                    elif self.keyboard.key == "#":
                                         break
-                                elif self.keyboard.key == "#":
-                                    break
-                        elif ret2 == 3: # 加热水量设置
-                            add_mode=1
-                            while True:
-                                with canvas(self.device) as draw:
-                                    draw.text((0,0), u"加热水量设置", font=font)
-                                    draw.text((0,font_size*1), u"{0:02d} cm".format(self.hot_waterVol), font=font)
-                                    draw.text((0,font_size*2), u"#确定", font=font)
-                                # 等待按键按下
-                                while self.keyboard.havekey == False:
-                                    time.sleep(0.01)
-                                # 复位按键标识符
-                                self.keyboard.havekey = False
-                                # 判断按下的是数字键
-                                if is_number(self.keyboard.key):
-                                    if add_mode == 1:
-                                        self.hot_waterVol=int(self.keyboard.key)
-                                        add_mode += 1
-                                    elif add_mode == 2:
-                                        self.hot_waterVol=self.hot_waterVol*10+int(self.keyboard.key)
-                                        add_mode += 1
-                                    elif add_mode >= 3:
+                            elif ret2 == 3: # 加热水量设置
+                                add_mode=1
+                                while True:
+                                    with canvas(self.device) as draw:
+                                        draw.text((0,0), u"加热水量设置", font=font)
+                                        draw.text((0,font_size*1), u"{0:02d} cm".format(self.hot_waterVol), font=font)
+                                        draw.text((0,font_size*2), u"#确定", font=font)
+                                    # 等待按键按下
+                                    while self.keyboard.havekey == False:
+                                        time.sleep(0.01)
+                                    # 复位按键标识符
+                                    self.keyboard.havekey = False
+                                    # 判断按下的是数字键
+                                    if is_number(self.keyboard.key):
+                                        if add_mode == 1:
+                                            self.hot_waterVol=int(self.keyboard.key)
+                                            add_mode += 1
+                                        elif add_mode == 2:
+                                            self.hot_waterVol=self.hot_waterVol*10+int(self.keyboard.key)
+                                            add_mode += 1
+                                        elif add_mode >= 3:
+                                            break
+                                    elif self.keyboard.key == "#":
                                         break
-                                elif self.keyboard.key == "#":
-                                    break
-                        elif ret2 == -1:
-                            break
+                            elif ret2 == -1:
+                                break
                     elif ret == 2:  # 保温设置目录
                         while True:
                             menu_3=OptionMenu(u"保温设定", self.keyboard, self.device, font=font)
