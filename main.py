@@ -513,7 +513,7 @@ class ysj(object):
                                         gitinfo=os.popen('cd /home/pi/Smart-Water-dispenser;git checkout -- . 2>&1;git pull 2>&1').readlines()
                                         for index, item in enumerate(gitinfo):
                                             draw.text((0,font_12_size*(3+index)), u"{0}".format(item), font=font_12)
-                                        
+                                        os.system("chown pi:pi /home/pi/Smart-Water-dispenser/*.py")
                                     except Exception as e:
                                         draw.text((0,font_12_size*4), u"错误：{0}".format(e), font=font_12, fill=(255,0,0))
                                     draw.text((0,font_12_size*12), u"任意键返回", font=font_12, fill=(255,0,0))
@@ -528,7 +528,7 @@ class ysj(object):
                                     draw.text((0,0), u"网络对时", font=font, fill=(255,0,0))
                                     try:
                                         draw.text((0,font_12_size*3), u"{0}".format(os.popen('ntpdate ntp1.aliyun.com 2>&1').readlines()[0]), font=font_12)
-                                        draw.text((0,font_12_size*4), u"{0}".format(os.popen('hwclock -w;if [ "$?" == "0" ];then echo "ok";fi 2>&1').readlines()[0]), font=font_12)
+                                        draw.text((0,font_12_size*4), u"{0}".format(os.popen('hwclock -w && hwclock -r 2>&1').readlines()[0]), font=font_12)
                                     except Exception as e:
                                         draw.text((0,font_12_size*4), u"错误：{0}".format(e), font=font_12, fill=(255,0,0))
                                     draw.text((0,font_12_size*12), u"任意键返回", font=font_12, fill=(255,0,0))
